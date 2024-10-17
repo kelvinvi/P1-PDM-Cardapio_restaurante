@@ -69,7 +69,7 @@ class StateTelaRegistro extends State<TelaRegistro> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.person_add, size: 100, color: Colors.blue), // Ícone grande no meio
+              Icon(Icons.person_add, size: 100, color: Colors.blue),
               SizedBox(height: 20),
               TextField(
                 controller: nomeController,
