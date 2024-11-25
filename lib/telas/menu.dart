@@ -1,63 +1,68 @@
 import 'package:flutter/material.dart';
-import 'pedidos.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class TelaMenu extends StatefulWidget {
+  const TelaMenu({super.key});
+
   @override
   StateTelaMenu createState() => StateTelaMenu();
 }
 
 class StateTelaMenu extends State<TelaMenu> {
-  final List<Map<String, dynamic>> carrinho = [];
+  List<Map<String, dynamic>> categorias = [];
+  List<Map<String, dynamic>> carrinho = [];
 
-  final List<Map<String, dynamic>> categorias = [
-    {
-      'nome': 'Entradas',
-      'itens': [
-        {'nome': 'Bruschetta de Tomate com Manjericão', 'preco': 20.0, 'imagem': 'images/bruschetta.jpg', 'descricao': 'Bruschetta crocante com tomate fresco e manjericão.'},
-        {'nome': 'Arancini Pomodoro', 'preco': 25.0, 'imagem': 'images/arancini.jpg', 'descricao': 'Bolinhos de arroz italianos recheados com queijo.'},
-      ]
-    },
-    {
-      'nome': 'Pratos Principais',
-      'itens': [
-        {'nome': 'Risotto de Cogumelos', 'preco': 50.0, 'imagem': 'images/risotto.jpg', 'descricao': 'Risotto cremoso com cogumelos frescos e parmesão.'},
-        {'nome': 'Pizza Marguerita', 'preco': 40.0, 'imagem': 'images/pizza.jpg', 'descricao': 'Pizza clássica (8 fatias) com molho de tomate, manjericão e mussarela.'},
-        {'nome': 'Lasanha', 'preco': 40.0, 'imagem': 'images/lasanha.jpg', 'descricao': 'Lasanha ao forno com camadas de carne, queijo mussarela e molho de tomate.'},
-        {'nome': 'Spaguetti', 'preco': 30.0, 'imagem': 'images/spaguetti.jpg', 'descricao': 'Spaguetti com molho à bolonhesa e queijo parmesão.'},
-      ]
-    },
-    {
-      'nome': 'Bebidas',
-      'itens': [
-        {'nome': 'Vinho Tinto Suave', 'preco': 60.0, 'imagem': 'images/vinho.jpg', 'descricao': 'Garrafa de vinho tinto suave.'},
-        {'nome': 'Coca-Cola', 'preco': 5.0, 'imagem': 'images/coca_cola.jpg', 'descricao': 'Coca-cola em lata (350 ml).'},
-        {'nome': 'Suco de Laranja', 'preco': 10.0, 'imagem': 'images/suco_laranja.jpg', 'descricao': 'Copo de suco de laranja natural (450 ml).'},
-        {'nome': 'Água', 'preco': 3.50, 'imagem': 'images/agua.jpg', 'descricao': 'Água mineral sem gás.'},
-      ]
-    },
-    {
-      'nome': 'Sobremesas',
-      'itens': [
-        {'nome': 'Gelato de Pistache', 'preco': 20.0, 'imagem': 'images/gelato.jpg', 'descricao': 'Gelato cremoso de pistache na casquinha.'},
-        {'nome': 'Panna Cotta', 'preco': 15.0, 'imagem': 'images/panna_cotta.jpg', 'descricao': 'Sobremesa italiana clássica com calda de frutas.'},
-      ]
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    fetchCategorias();
+  }
+
+  fetchCategorias() async {
+    final categoriasCollection = await FirebaseFirestore.instance.collection('categorias').get();
+    final categoriasList = categoriasCollection.docs.map((doc) {
+      Map<String, dynamic> categoria = {};
+      if (doc.data().containsKey('nome')) categoria['nome'] = doc['nome'];
+      if (doc.data().containsKey('descricao')) categoria['descricao'] = doc['descricao'];
+      if (doc.data().containsKey('ordem')) categoria['ordem'] = doc['ordem'];
+      return categoria;
+    }).toList();
+
+    setState(() {
+      categorias = categoriasList;
+    });
+  }
+
+  Future<List<Map<String, dynamic>>> fetchItens(String categoriaNome) async {
+    final itensCollection = await FirebaseFirestore.instance
+        .collection('itens_cardapio')
+        .where('categoria', isEqualTo: categoriaNome)
+        .get();
+
+    return itensCollection.docs.map((doc) {
+      Map<String, dynamic> item = {};
+      if (doc.data().containsKey('nome')) item['nome'] = doc['nome'];
+      if (doc.data().containsKey('descricao')) item['descricao'] = doc['descricao'];
+      if (doc.data().containsKey('preco')) item['preco'] = doc['preco'];
+      if (doc.data().containsKey('imagem')) item['imagem'] = doc['imagem'];
+      if (doc.data().containsKey('ativo')) item['ativo'] = doc['ativo'];
+      return item;
+    }).toList();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Cardápio'),
+        title: const Text('Cardápio'),
         actions: [
           IconButton(
-            icon: Icon(Icons.shopping_cart),
+            icon: const Icon(Icons.shopping_cart),
             onPressed: () {
-              Navigator.push(
+              Navigator.pushNamed(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => TelaCarrinho(carrinho: carrinho),
-                ),
+                '/carrinho',
+                arguments: carrinho,
               );
             },
           ),
@@ -65,31 +70,66 @@ class StateTelaMenu extends State<TelaMenu> {
       ),
       body: ListView.builder(
         itemCount: categorias.length,
-        itemBuilder: (context, index) {
-          final categoria = categorias[index];
-          return ExpansionTile(
-            title: Text(categoria['nome'], style: TextStyle(fontSize: 24)),
-            children: [
-              ListView.builder(
-                shrinkWrap: true,
-                physics: NeverScrollableScrollPhysics(),
-                itemCount: categoria['itens'].length,
-                itemBuilder: (context, itemIndex) {
-                  final produto = categoria['itens'][itemIndex];
-                  return Card(
-                    margin: EdgeInsets.all(10),
-                    child: ListTile(
-                      leading: Image.asset(produto['imagem'], width: 50, height: 50, fit: BoxFit.cover),
-                      title: Text(produto['nome']),
-                      subtitle: Text('R\$ ${produto['preco'].toStringAsFixed(2)}'),
-                      onTap: () {
-                        Navigator.pushNamed(context, '/detalhes', arguments: {'produto': produto, 'carrinho': carrinho});
-                      },
-                    ),
-                  );
-                },
-              ),
-            ],
+        itemBuilder: (context, categoriaIndex) {
+          final categoria = categorias[categoriaIndex];
+
+          return FutureBuilder<List<Map<String, dynamic>>>(
+            future: fetchItens(categoria['nome']),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const CircularProgressIndicator();
+              }
+
+              if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                return const Text("Nenhum item encontrado.");
+              }
+
+              final itens = snapshot.data!;
+
+              return ExpansionTile(
+                title: Text(categoria['nome'], style: const TextStyle(fontSize: 24)),
+                children: [
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: itens.length,
+                    itemBuilder: (context, itemIndex) {
+                      final produto = itens[itemIndex];
+
+                      return Card(
+                        margin: const EdgeInsets.all(10),
+                        child: ListTile(
+                          leading: Image.asset(
+                            'assets/images/${produto['imagem']}',
+                            width: 50,
+                            height: 50,
+                            fit: BoxFit.cover,
+                          ),
+                          title: Text(produto['nome']),
+                          subtitle: Text('R\$ ${produto['preco'].toStringAsFixed(2)}'),
+                          onTap: () {
+                            Navigator.pushNamed(
+                              context, 
+                              '/detalhes', 
+                              arguments: {
+                                'produto': produto,
+                                'carrinho': carrinho
+                              },
+                            ).then((carrinhoAtualizado) {
+                              if (carrinhoAtualizado != null && carrinhoAtualizado is List<Map<String, dynamic>>) {
+                                setState(() {
+                                  carrinho = List<Map<String, dynamic>>.from(carrinhoAtualizado);
+                                });
+                              }
+                            });
+                          },
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              );
+            },
           );
         },
       ),

@@ -1,20 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class TelaRegistro extends StatefulWidget {
-  final List<Map<String, String>> usuariosCadastrados;
-
-  TelaRegistro({required this.usuariosCadastrados});
+  const TelaRegistro({super.key});
 
   @override
   StateTelaRegistro createState() => StateTelaRegistro();
 }
+
 class StateTelaRegistro extends State<TelaRegistro> {
   final nomeController = TextEditingController();
   final emailController = TextEditingController();
   final senhaController = TextEditingController();
   final confirmarSenhaController = TextEditingController();
 
-  void cadastrar() {
+  Future<void> cadastrar() async {
     final nome = nomeController.text;
     final email = emailController.text;
     final senha = senhaController.text;
@@ -32,23 +33,33 @@ class StateTelaRegistro extends State<TelaRegistro> {
       mostrarMensagemErro('Email inválido');
       return;
     }
-    widget.usuariosCadastrados.add({
-      'nome': nome,
-      'email': email,
-      'senha': senha,
-    });
-    Navigator.pushReplacementNamed(context, '/');
+
+    try {
+      UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: email,
+        password: senha,
+      );
+
+      FirebaseFirestore.instance.collection('usuarios').doc(userCredential.user?.uid).set({
+        'nome': nome,
+        'email': email,
+      });
+
+      Navigator.pushReplacementNamed(context, '/');  
+    } catch (e) {
+      mostrarMensagemErro('Erro ao criar conta: ${e.toString()}');
+    }
   }
 
   void mostrarMensagemErro(String mensagem) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('Erro'),
+        title: const Text('Erro'),
         content: Text(mensagem),
         actions: [
           TextButton(
-            child: Text('OK'),
+            child: const Text('OK'),
             onPressed: () {
               Navigator.pop(ctx);
             },
@@ -57,11 +68,12 @@ class StateTelaRegistro extends State<TelaRegistro> {
       ),
     );
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Registro'),
+        title: const Text('Registro'),
       ),
       body: Center(
         child: Padding(
@@ -69,38 +81,38 @@ class StateTelaRegistro extends State<TelaRegistro> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.person_add, size: 100, color: Colors.blue),
-              SizedBox(height: 20),
+              const Icon(Icons.person_add, size: 100, color: Colors.blue),
+              const SizedBox(height: 20),
               TextField(
                 controller: nomeController,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Nome completo',
                 ),
               ),
               TextField(
                 controller: emailController,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Email',
                 ),
               ),
               TextField(
                 controller: senhaController,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Senha',
                 ),
                 obscureText: true,
               ),
               TextField(
                 controller: confirmarSenhaController,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Confirmar Senha',
                 ),
                 obscureText: true,
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: cadastrar,
-                child: Text('Criar Conta'),
+                child: const Text('Criar Conta'),
               ),
             ],
           ),

@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "831638446592",
+    "project_id": "cardapio-restaurante-e57df",
+    "storage_bucket": "cardapio-restaurante-e57df.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:831638446592:android:8828daf453c4567fb36ee5",
+        "android_client_info": {
+          "package_name": "com.example.cardapio_restaurant"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBjIHjH_iXx7QjiPprCAmq9bpa4EwWjnE4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:831638446592:android:4634583dbeaf91b8b36ee5",
+        "android_client_info": {
+          "package_name": "com.example.cardapio_restaurante"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBjIHjH_iXx7QjiPprCAmq9bpa4EwWjnE4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
